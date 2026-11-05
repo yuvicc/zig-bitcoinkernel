@@ -41,6 +41,10 @@ pub fn build(b: *std.Build) void {
             .imports = &.{.{ .name = "bitcoinkernel", .module = mod }},
         }),
     });
+    // Regtest blocks from the upstream kernel test suite.
+    integration_tests.root_module.addAnonymousImport("block_data.h", .{
+        .root_source_file = b.path("depend/bitcoin/src/test/kernel/block_data.h"),
+    });
     test_step.dependOn(&b.addRunArtifact(integration_tests).step);
 
     // Compile-time check that `src/c.zig` matches the upstream header.
