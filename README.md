@@ -17,29 +17,44 @@ The package provides two layers:
 ## Requirements
 
 - Zig 0.17.0
-- `libbitcoinkernel` built from Bitcoin Core v32.0:
+- CMake and a C++20 compiler
+- Boost headers (e.g. `brew install boost` or `apt install libboost-dev`)
 
-```sh
-git clone --branch v32.0 https://github.com/bitcoin/bitcoin.git
-cd bitcoin
-cmake -B build -DBUILD_KERNEL_LIB=ON -DBUILD_SHARED_LIBS=ON
-cmake --build build --target bitcoinkernel -j"$(nproc)"
-# the library ends up in build/lib/
-```
+Bitcoin Core v32.0 is included as a git subtree in `depend/bitcoin`, and
+`zig build` compiles `libbitcoinkernel` from it with CMake. The CMake build
+directory lives in `.zig-cache/bitcoinkernel/` and is reused, so only the first
+build compiles the kernel (a few minutes, or seconds with ccache).
 
 ## Building and testing
 
 ```sh
-zig build test -Dkernel-lib-dir=/path/to/bitcoin/build/lib
-zig build run-verify_script -Dkernel-lib-dir=/path/to/bitcoin/build/lib
+zig build test
+zig build run-verify_script
 ```
 
 Build options:
 
 | Option | Description |
 | --- | --- |
-| `-Dkernel-lib-dir=DIR` | Link the library found in `DIR` (and add it to the rpath). The file is linked directly, so other copies on the default search paths cannot shadow it. Without this option the system library paths are searched. |
-| `-Dkernel-static=true` | Link `libbitcoinkernel.a` instead of the shared library (also links libc++). Requires a kernel built with `-DBUILD_SHARED_LIBS=OFF`. |
+| `-Dkernel=subtree` | Build `libbitcoinkernel` from `depend/bitcoin` (default). Native target only. |
+| `-Dkernel=system` | Link an installed `libbitcoinkernel` from the system library paths instead. |
+| `-Dkernel-lib-dir=DIR` | Link the installed library in `DIR` (implies `-Dkernel=system`). The file is linked directly, so other copies on the default search paths cannot shadow it. |
+| `-Dkernel-static=BOOL` | Link `libbitcoinkernel` statically (also links libc++). Defaults to `true` for `subtree` and `false` for `system`. With `system`, the installed library must have been built with `-DBUILD_SHARED_LIBS=OFF`. |
+
+## Updating Bitcoin Core
+
+Update the subtree to a new release tag from
+[github.com/bitcoin/bitcoin](https://github.com/bitcoin/bitcoin):
+
+```sh
+contrib/update-bitcoin-subtree.sh v33.0
+zig build test
+```
+
+The header conformance test then lists every declaration in `src/c.zig` that
+no longer matches the new `bitcoinkernel.h`. Update `src/c.zig` and the
+wrappers to match, and update the version mentioned in this README and in
+`src/root.zig` / `src/c.zig`.
 
 ## Using it as a dependency
 
@@ -52,10 +67,13 @@ zig fetch --save git+https://github.com/<you>/zig-bitcoinkernel
 const btck_dep = b.dependency("bitcoinkernel", .{
     .target = target,
     .optimize = optimize,
-    .@"kernel-lib-dir" = @as([]const u8, "/path/to/bitcoin/build/lib"),
 });
 exe.root_module.addImport("bitcoinkernel", btck_dep.module("bitcoinkernel"));
 ```
+
+The kernel is built from the bundled subtree. Pass
+`.kernel = .system` (or `.@"kernel-lib-dir" = "..."`) to link an installed
+library instead.
 
 ## Example
 
