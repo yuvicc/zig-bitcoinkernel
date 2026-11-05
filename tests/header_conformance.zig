@@ -1,7 +1,8 @@
 //! Checks at compile time that the hand-written declarations in `src/c.zig`
-//! match the vendored upstream `include/bitcoinkernel.h` (translated with
-//! translate-c): every function, constant, typedef and struct must exist on
-//! both sides with compatible signatures and identical values.
+//! match `depend/bitcoin/src/kernel/bitcoinkernel.h` from the Bitcoin Core
+//! subtree (translated with translate-c): every function, constant, typedef
+//! and struct must exist on both sides with compatible signatures and
+//! identical values.
 
 const std = @import("std");
 const h = @import("bitcoinkernel_h");

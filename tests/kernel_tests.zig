@@ -7,7 +7,9 @@ const btck = @import("bitcoinkernel");
 const testing = std.testing;
 const gpa = testing.allocator;
 
-const regtest_block_data = @embedFile("data/regtest_blocks.txt");
+/// `REGTEST_BLOCK_DATA` from the subtree's `src/test/kernel/block_data.h`:
+/// one quoted hex string per block.
+const regtest_block_data = @embedFile("block_data.h");
 
 fn hexAlloc(allocator: std.mem.Allocator, hex: []const u8) ![]u8 {
     const out = try allocator.alloc(u8, hex.len / 2);
@@ -25,9 +27,10 @@ fn loadRegtestBlocks(allocator: std.mem.Allocator) ![][]u8 {
     }
     var it = std.mem.tokenizeScalar(u8, regtest_block_data, '\n');
     while (it.next()) |line| {
-        const trimmed = std.mem.trim(u8, line, " \r");
-        if (trimmed.len == 0) continue;
-        try list.append(allocator, try hexAlloc(allocator, trimmed));
+        // Block lines look like `"0000002006...",`.
+        const trimmed = std.mem.trim(u8, line, " \r\t,");
+        if (trimmed.len < 2 or trimmed[0] != '"' or trimmed[trimmed.len - 1] != '"') continue;
+        try list.append(allocator, try hexAlloc(allocator, trimmed[1 .. trimmed.len - 1]));
     }
     return list.toOwnedSlice(allocator);
 }
