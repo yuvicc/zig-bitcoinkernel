@@ -45,7 +45,7 @@ pub fn build(b: *std.Build) void {
 
     // Compile-time check that `src/c.zig` matches the upstream header.
     const translated_header = b.addTranslateC(.{
-        .root_source_file = b.path("include/bitcoinkernel.h"),
+        .root_source_file = b.path("depend/bitcoin/src/kernel/bitcoinkernel.h"),
         .target = target,
         .optimize = optimize,
     });

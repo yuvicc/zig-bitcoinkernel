@@ -8,8 +8,9 @@ the consensus engine of Bitcoin Core, targeting the C API shipped with **Bitcoin
 The package provides two layers:
 
 - `bitcoinkernel.c` — raw `extern` declarations mirroring `bitcoinkernel.h` one-to-one.
-  A compile-time test checks them against the vendored upstream header
-  (`include/bitcoinkernel.h`), so drift is caught by `zig build test`.
+  A compile-time test checks them against the header in the Bitcoin Core
+  subtree (`depend/bitcoin/src/kernel/bitcoinkernel.h`), so drift is caught by
+  `zig build test`.
 - An idiomatic wrapper (the package root) with error unions, slices, enums,
   packed-struct flags, iterators and comptime-generated callback trampolines.
 

@@ -3,7 +3,7 @@
 //!
 //! Most users should prefer the idiomatic wrappers exported from the package
 //! root. These declarations are kept public for advanced use cases and are
-//! checked against the vendored upstream header by `zig build test`.
+//! checked against the header in the Bitcoin Core subtree (`depend/bitcoin`) by `zig build test`.
 
 // ---------------------------------------------------------------------------
 // Opaque types
